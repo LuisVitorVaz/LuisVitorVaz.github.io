@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Principal</title>
+    <style>
+        body {
+            background-color: lightblue; /* Definindo a cor de fundo como azul claro */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Para centralizar verticalmente */
+        }
+
+        h1 {
+            font-size: 32px; /* Aumentando o tamanho do texto */
+        }
+
+        button {
+            margin: 10px; /* Adicionando margem para separar os botões */
+            padding: 20px 50px; /* Tamanho fixo das caixas */
+            border-radius: 20px; /* Deixando as bordas das caixas redondas */
+            font-size: 30px; /* Aumentando o tamanho do texto dos botões */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Escolha a temperatura :</h1>
+    <button onclick="redirecionarParaDia()">Dia</button>
+    <button onclick="redirecionarParaSemana()">Semana</button>
+    <button onclick="redirecionarParaMes()">Mês</button>
+    <button onclick="redirecionarParaAno()">Ano</button>
+
+    <script>
+        function redirecionarParaDia() {
+            window.location.href = "passaros.html";
+        }
+
+        function redirecionarParaSemana() {
+            window.location.href = "passaros.html";
+        }
+
+        function redirecionarParaMes() {
+            window.location.href = "passaros.html";
+        }
+
+        function redirecionarParaAno() {
+            window.location.href = "passaros.html";
+        }
+    </script>
+</body>
+</html>
