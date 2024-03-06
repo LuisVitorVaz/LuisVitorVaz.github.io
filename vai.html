@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaflet Camadas</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([51.505, -0.09], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+    }).addTo(map);
+
+    // Cria uma camada de grupo para os marcadores
+    var markersLayer = L.layerGroup().addTo(map);
+
+    // Adiciona um marcador
+    var marker = L.marker([51.5, -0.09]).addTo(markersLayer);
+
+    // Cria uma camada de grupo para os círculos de alerta
+    var circlesLayer = L.layerGroup().addTo(map);
+
+    // Adiciona um círculo de alerta
+    var alertCircle = L.circle([51.5, -0.09], {
+        color: 'red', // Cor do círculo
+        fillColor: 'red', // Cor de preenchimento do círculo
+        fillOpacity: 0.5, // Opacidade do preenchimento do círculo
+        radius: 5 // Raio do círculo
+    }).addTo(circlesLayer);
+
+    function toggleCircle() {
+        var isVisible = true;
+
+        setInterval(function() {
+            if (isVisible) {
+                circlesLayer.removeLayer(alertCircle); // Remove o círculo de alerta da camada
+            } else {
+                circlesLayer.addLayer(alertCircle); // Adiciona o círculo de alerta à camada
+            }
+
+            isVisible = !isVisible; // Inverte o estado de visibilidade
+        }, 500); // Alterna a cada 500 milissegundos (meio segundo)
+    }
+
+    toggleCircle(); // Inicia a alternância de visibilidade do círculo
+
+</script>
+
+</body>
+</html>

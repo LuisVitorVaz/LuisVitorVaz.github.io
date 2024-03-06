@@ -1,46 +1,60 @@
-const firebaseConfig = {
-    apiKey: "AIzaSyCG6pcJI9JV8G6gW8F8HAhfEGJvw8vhXDY",
-    authDomain: "bancodedados-a7591.firebaseapp.com",
-    databaseURL: "https://bancodedados-a7591-default-rtdb.firebaseio.com",
-    projectId: "bancodedados-a7591",
-    storageBucket: "bancodedados-a7591.appspot.com",
-    messagingSenderId: "741882138538",
-    appId: "1:741882138538:web:ac252fba2cb841cc39e5d3",
-    measurementId: "G-6BRRPEZT5Y"
-};
-
-// Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-
 // Faz a ligação com o HTML
-var passarosList = document.getElementById("passaros-list");
-
-// Inicializa o Firebase (se ainda não estiver inicializado)
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
+var dadosList = document.getElementById("dados-list");
+var cont = 0;
 var database = firebase.database();
-var passarosRef = database.ref("temperatura");
+var dadosRef = database.ref("dados"); // Substitua pelo ID correto do seu nó de dados
 
 
-passarosRef.on("child_added", function(childSnapshot) {
-  var valor = childSnapshot.val();
 
- 
-  var listItem = document.createElement("li");
-  listItem.textContent = "Valor: " + valor;
-
- 
-  passarosList.appendChild(listItem);
-});
-
-passarosRef.once("value") 
+dadosRef.once("value")
   .then(function(snapshot) {
     if (!snapshot.exists()) {
-      console.log("Nenhum dado encontrado para temperatura.");
+      console.log("Nenhum dado encontrado.");
+    } else {
+      snapshot.forEach(function(childSnapshot) {
+        // Acessa os valores diretamente no nível do childSnapshot
+        var dataValor = childSnapshot.child("dado1").val();
+        var horaValor = childSnapshot.child("dado2").val();
+        var valorTexto = 100; // dados do campo valor
+        console.log(dataValor);
+        console.log(horaValor);
+
+         // Chama a função para inserir os dados na tabela
+        inserir_dados(dataValor, horaValor, valorTexto);
+
+        const evento = new CustomEvent('atualizarDataHora', { detail: { dataValor, horaValor } });
+        document.dispatchEvent(evento);
+
+      });
     }
   })
   .catch(function(error) {
     console.error("Erro ao recuperar dados: " + error.message);
   });
+
+// Escuta alterações contínuas no banco de dados
+dadosRef.on("value", function(snapshot) {
+  // Limpa a tabela antes de adicionar os novos dados
+  dadosList.innerHTML = "";
+  
+  snapshot.forEach(function(childSnapshot) {
+    // Acessa os valores diretamente no nível do childSnapshot
+    var dataValor = childSnapshot.child("dado1").val();
+    var horaValor = childSnapshot.child("dado2").val();
+    var valorTexto = 100; // dados do campo valor
+    
+    // Chama a função para inserir os dados na tabela
+    inserir_dados(dataValor, horaValor, valorTexto);
+
+    
+  });
+});
+
+function inserir_dados(dataValor, horaValor, valorTexto) {
+  var newRow = dadosList.insertRow();
+  // Adiciona células com os valores correspondentes
+  newRow.insertCell(0).textContent = 1; // ID
+  newRow.insertCell(1).textContent = dataValor;
+  newRow.insertCell(2).textContent = horaValor;
+  newRow.insertCell(3).textContent = valorTexto;
+}
