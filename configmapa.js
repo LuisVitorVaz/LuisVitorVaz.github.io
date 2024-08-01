@@ -1,51 +1,43 @@
-var cont = 0;
-var dataValor;
-var horaValor;
-var lat;
-var long;
+var cont = 0,dataValor, horaValor, lat, long;
+var panico,date,hour,map; // Variável para armazenar o mapa
 var dadoAnterior1 = null; // Variável global para armazenar o dado anterior
 var dadoAnterior2 = null; // Variável global para armazenar o dado anterior
 var polyline; // Variável para armazenar a linha poligonal
 var routingControl; // Variável para armazenar o controle de rota
 var waypoints = []; // Array para armazenar os pontos da rota
 var coordenadas_iniciais_lat, coordenadas_iniciais_lon;
-var coordenadas2, coordenadas3;
-var dadosList = document.getElementById("data-box");
 var database = firebase.database();
 var dadosRef = database.ref("dados"); // Substitua pelo ID correto do seu nó de dados
-var alertCircleRed; // Variável para o círculo vermelho
+export var alertCircleRed; // Variável para o círculo vermelho
+export let circulosdealerta = []; // Lista para armazenar os pontos adicionados
 export let circulosAdicionados = []; // Lista para armazenar os pontos adicionados
-let alertCircle; // Declare alertCircle como uma variável global
+export let trajetoria = []; // lista contendo os a ligacao entre os pontos
+export let linhapontos = []; // guarda todos os pontos recebidos entre as linhas 
 
-var map; // Variável para armazenar o mapa
-
-// dadosRef.once("value").then(function(snapshot) {
-//     // Verifica se há dados no snapshot
-//     if (snapshot.exists()) {
-//         // Se existir, você pode iterar sobre eles ou fazer qualquer outra operação necessária
-//         console.log("Há dados no banco de dados.");
-//         iniciarMapa(ajuda1, ajuda2, ajuda1, ajuda2);
-//     } else {
-//         console.log("Não há dados no banco de dados.");
-//     }
-// }).catch(function(error) {
-//     console.error("Erro ao acessar o banco de dados:", error);
-// });
 // Evento "child_added" para lidar com novos dados
 dadosRef.on("child_added", function(childSnapshot) {
 
      // Acessa os valores diretamente no nível do childSnapshot
     dataValor = childSnapshot.child("dado1").val();
     horaValor = childSnapshot.child("dado2").val();
+    panico = childSnapshot.child("botaoState").val();
+    date = childSnapshot.child("data").val();
+    hour = childSnapshot.child("hora").val();
+    
     console.log("Novo dado adicionado:");
     console.log(dataValor);
     console.log(horaValor);
-   
+    if(dataValor == 99999999 || horaValor == 99999999)
+    {
+        console.log("dados invalidos")
+    }
     // Exemplo de uso
     const coordenadas1 = converterParaCoordenadas(dataValor, horaValor);
     console.log("aqui esta \n");
     console.log("Latitude:", coordenadas1.latitude);
     console.log("Longitude:", coordenadas1.longitude);
+    // aqui chama funcao de popup
+
 
     // recupera a lat e longitude inicialmente
     if (cont == 0) {
@@ -55,13 +47,13 @@ dadosRef.on("child_added", function(childSnapshot) {
         cont = 50;
     }
 
-    // Verifica se o mapa já foi inicializado
+    // // Verifica se o mapa já foi inicializado
     if (!map) {
         iniciarMapa(coordenadas_iniciais_lat, coordenadas_iniciais_lon, coordenadas1.latitude, coordenadas1.longitude);
     }
     waypoints.push(L.latLng(coordenadas1.latitude, coordenadas1.longitude));
 
-    adicionarCirculo(coordenadas1.latitude, coordenadas1.longitude); // Adiciona o círculo no novo ponto
+    adicionarCirculo(coordenadas1.latitude, coordenadas1.longitude,panico); // Adiciona o círculo no novo ponto
 
     processarNovoDado(coordenadas1.latitude, coordenadas1.longitude); // Adiciona a nova coordenada à linha existente
   
@@ -74,7 +66,7 @@ function iniciarMapa(lat, lon, teste1, teste2) {
     console.log("dados dentro do mapa : ", teste2);
     // Coordenadas do Ponto A - Porto Alegre, Brasil
     const coordTaxi = [lat, lon];
-    toggleCircle(); // Inicia a alternância de visibilidade do círculo
+    // toggleCircle(); // Inicia a alternância de visibilidade do círculo
     
     // const coordTaxi = [-30.0346, -51.2177];
     // Coordenadas do Ponto B - Usuário (coordenadas fictícias)
@@ -113,14 +105,18 @@ function iniciarMapa(lat, lon, teste1, teste2) {
         fillOpacity: 0.5, // Opacidade do preenchimento do círculo
         radius: 10 // Raio do círculo
     }).addTo(map);
+    circulosdealerta.push(alertCircleRed); // Adiciona o ponto à lista
   
 
-    // Personaliza o ponto no mapa com imagem do táxi.
-    const taxiIcon = L.icon({
-        className: "taxi-pointers",
-        iconUrl: 'imagens/car-top-view.png',
-        iconSize: [45, 45]
-    });
+
+   // Define os ícones
+ const taxiIcon = L.icon({
+    className: "taxi-pointers",
+    iconUrl: 'imagens/barcosemfundo.png',
+    iconSize: [45, 45]
+});
+
+   
     var taxiMarker = L.marker(coordTaxi, { icon: taxiIcon }).addTo(map);
     taxiMarker.bindPopup('inicio');
     // Identifica a melhor rota para iniciar a viagem.
@@ -165,21 +161,37 @@ function converterParaCoordenadas(latitude, longitude) {
     return { latitude: lat, longitude: long };
 }
 
-export function adicionarCirculo(lat, lon) {
-    // Cria um círculo com raio de 3 metros (alterado de 1 para 3 para melhor visualização)
-    alertCircle = L.circle([lat, lon], {
-        color: 'green', // Cor da linha do círculo
-        fillColor: 'green', // Cor de preenchimento do círculo
-        fillOpacity: 0.5, // Opacidade do preenchimento
-        radius: 3 // Raio do círculo em metros
-    }).addTo(map); // Adiciona o círculo ao mapa
-    circulosAdicionados.push(alertCircle); // Adiciona o ponto à lista
+// DEVE RECEBER OS DADOS DO BANCO
+export function adicionarCirculo(lat, lon, panico) {
+    let cor = 'green'; // Cor padrão do círculo
+
+    // Verifica se é um evento de pânico
+    if (panico > 0) {
+        cor = 'red'; // Altera a cor para vermelho
+    }
+
+    // Cria um círculo com a cor determinada
+    const circle = L.circle([lat, lon], {
+        color: cor,
+        fillColor: cor,
+        fillOpacity: 0.5,
+        radius: 3
+    }).addTo(map);
+
+    // Adiciona o círculo à lista de círculos
+    circulosAdicionados.push(circle);
+
+    // Adiciona a coordenada à linha da rota
     adicionarCoordenadaNaLinha(lat, lon);
+
+    // Atualiza o popup
+    popup();
 }
 
-function iniciarLinha(lat, lon) {
+export function iniciarLinha(lat, lon) {
     // Inicializa a linha poligonal com a primeira coordenada
     polyline = L.polyline([[lat, lon]], { color: 'blue' }).addTo(map);
+    trajetoria.push(polyline);
 }
 
 function adicionarCoordenadaNaLinha(lat, lon) {
@@ -202,21 +214,34 @@ function processarNovoDado(novo1, novo2) {
 export function criarLinhaEntrePontos(lat1, lon1, lat2, lon2) {
     // Calcula a distância entre os pontos usando a função distanceTo() do Leaflet
     const distance = L.latLng(lat1, lon1).distanceTo([lat2, lon2]);
+    linhapontos.push(distance);
 }
 // Função para alternar a visibilidade do círculo
 
-function toggleCircle(){
-
+export function toggleCircle(intervalo) {
+       
     var isVisible = true;
-
     setInterval(function() {
         if (isVisible) {
             alertCircleRed.setStyle({ fillOpacity: 0 }); // Torna o círculo invisível
         } else {
-           alertCircleRed.setStyle({ fillOpacity: 0.5 }); // Torna o círculo visível
+            alertCircleRed.setStyle({ fillOpacity: 0.5 }); // Torna o círculo visível
         }
 
         isVisible = !isVisible; // Inverte o estado de visibilidade
     }, 500); // Alterna a cada 500 milissegundos (meio segundo)
 }
+function popup(){
 
+    circulosAdicionados.forEach((circulo) => {
+        const lat = circulo.getLatLng().lat;
+        const lng = circulo.getLatLng().lng;
+        var dataFormatada =date;
+        var horaFormatada =hour;
+        const popupContent = `Latitude: ${lat}<br>Longitude: ${lng}<br>Data: ${dataFormatada}<br>Hora: ${horaFormatada}`;
+    
+        circulo.bindPopup(popupContent).openPopup();
+    });
+}
+
+  

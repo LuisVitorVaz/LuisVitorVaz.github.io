@@ -2,7 +2,7 @@
 var dadosList = document.getElementById("dados-list");
 var cont = 0;
 var database = firebase.database();
-var dadosRef = database.ref("data");
+var dadosRef = database.ref("dados");
 let blockElementsActive = false;
 
 dadosRef.once("value")
@@ -12,7 +12,7 @@ dadosRef.once("value")
     } else {
       snapshot.forEach(function(childSnapshot) {
         // Acessa o valor da temperatura
-        var temperature = childSnapshot.child("temperature").val();
+        var temperature = childSnapshot.child("temperatura").val();
         console.log(temperature);
         var dia = childSnapshot.child("data").val();
         console.log(temperature);

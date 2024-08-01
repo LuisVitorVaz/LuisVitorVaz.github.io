@@ -1,5 +1,6 @@
 (function()
 {  
+  let blockElementsActive = true;
     
     const firebaseConfig = {
     apiKey: "AIzaSyCG6pcJI9JV8G6gW8F8HAhfEGJvw8vhXDY",
